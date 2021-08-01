@@ -66,7 +66,10 @@ class Moderation(commands.Cog):
         except asyncio.TimeoutError:
             await confirm.edit(embed=discord.Embed(title="Timed Out", color=0xFF0000).add_field(name=f"{ctx.author.name}, You took too long to respond!", value="Try running the command again").set_footer(text=f"FinderBot Version {info.version}"))
         else:
-            await user.send(embed=discord.Embed(title=f"You have been banned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
+            try:
+                await user.send(embed=discord.Embed(title=f"You have been banned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
+            except:
+                pass
             await ctx.guild.ban(user, reason=reason)
             await confirm.edit(embed=discord.Embed(title="User Banned", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
@@ -99,7 +102,10 @@ class Moderation(commands.Cog):
         except asyncio.TimeoutError:
             await confirm.edit(embed=discord.Embed(title="Timed Out", color=0xFF0000).add_field(name=f"{ctx.author.name}, You took too long to respond!", value="Try running the command again").set_footer(text=f"FinderBot Version {info.version}"))
         else:
-            await user.send(embed=discord.Embed(title=f"You have been temp banned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}").set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
+            try:
+                await user.send(embed=discord.Embed(title=f"You have been temp banned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}").set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
+            except:
+                pass
             await ctx.guild.ban(user, reason=reason)
             await confirm.edit(embed=discord.Embed(title="User Temp Banned", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.bans": 1}, "$set": {f"{user.id}.unbans.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}}) 
@@ -180,7 +186,10 @@ class Moderation(commands.Cog):
         except asyncio.TimeoutError:
             await confirm.edit(embed=discord.Embed(title="Timed Out", color=0xFF0000).add_field(name=f"{ctx.author.name}, You took too long to respond!", value="Try running the command again").set_footer(text=f"FinderBot Version {info.version}"))
         else:
-            await user.send(embed=discord.Embed(title="You have been kicked", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
+            try:
+                await user.send(embed=discord.Embed(title="You have been kicked", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
+            except:
+                pass
             await ctx.guild.kick(user, reason=reason)
             await confirm.edit(embed=discord.Embed(title="User Kicked", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.kicks": 1}})
@@ -203,7 +212,10 @@ class Moderation(commands.Cog):
             await ctx.send(embed=discord.Embed(title="Warning Disabled", colour=0x3DF270, description="If you are a server administator you can enable the warn command in settings").set_footer(text=f"FinderBot Version {info.version}"))
             return
         await ctx.send(embed=discord.Embed(title="User Warned", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        await user.send(embed=discord.Embed(title="You Have Been Warned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
+        try:
+            await user.send(embed=discord.Embed(title="You Have Been Warned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
+        except:
+            pass
         await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.warns": 1}})
     # ================================
 
@@ -234,7 +246,10 @@ class Moderation(commands.Cog):
             await ctx.guild.create_text_channel('Muted Chat', overwrites={ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False), discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")): discord.PermissionOverwrite(read_messages=True)})
             await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_chat_id": channel.id}})
         await ctx.send(embed=discord.Embed(title="User Muted", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
+        try:
+            await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
+        except:
+            pass
         await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.mutes": 1}})
     # ================================
     # ========= Mute Perms ===========
@@ -286,7 +301,10 @@ class Moderation(commands.Cog):
             await ctx.guild.create_text_channel('Muted Chat', overwrites={ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False), discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")): discord.PermissionOverwrite(read_messages=True)})
             await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_chat_id": channel.id}})
         await ctx.send(embed=discord.Embed(title="User Muted", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
+        try:
+            await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
+        except:
+            pass
         await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.mutes": 1}, "$set": {f"{user.id}.unmutes.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}})
     # ================================
     # ========= Mute Check ===========
