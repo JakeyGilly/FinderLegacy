@@ -78,7 +78,7 @@ class Economy(commands.Cog):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
         if not await self.bot.db.economy.find_one({"_id": ctx.guild.id}):
             await self.bot.db.economy.insert_one({"_id": ctx.guild.id})
-        if (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(ctx.author.id)) and (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(ctx.author.id)).get("dailyCooldown") or await self.bot.db.economy.find_one({"_id": ctx.guild.id, str(ctx.author.id)+".dailyCooldown": {"$gt": datetime.datetime.now()}}):
+        if await self.bot.db.economy.find_one({"_id": ctx.guild.id, str(ctx.author.id)+".dailyCooldown": {"$gt": datetime.datetime.now()}}):
             time = (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(ctx.author.id)).get("dailyCooldown")
             await ctx.send(embed=discord.Embed(title=f"Daily", color=0xff0000).add_field(name="You have already used your daily.", value=f"Please wait {humanize_delta(relativedelta(time, datetime.datetime.now()))}.", inline=False).set_footer(text=f"FinderBot {info.version}"))
             return
