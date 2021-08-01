@@ -192,7 +192,7 @@ class Economy(commands.Cog):
             await ctx.send(embed=discord.Embed(title="Pay", color=0xff0000).add_field(name=f"Amount cannot be negative", value=f"Amount: {amount}", inline=False).set_footer(text=f"FinderBot {info.version}"))
             return
         if int(amount) == 0:
-            wallet = (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(ctx.author.id)).get("wallet") or 0 if (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(ctx.author.id)) else 0
+            wallet = (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(user.id)).get("wallet") or 0 if (await self.bot.db.economy.find_one({"_id": ctx.guild.id})).get(str(ctx.author.id)) else 0
             await ctx.send(embed=discord.Embed(title="Pay", color=0x00ff00).add_field(name=f"You paid {EcoSymbol}{amount}", value=f"{user.mention} now has {EcoSymbol}{wallet}", inline=False).set_footer(text=f"FinderBot {info.version}"))
             return
         wallet = 0
