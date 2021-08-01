@@ -1,0 +1,7 @@
+discord
+aiosqlite
+python-dateutil
+requests
+aiohttp
+Pillow
+discord-components
