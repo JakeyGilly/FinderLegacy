@@ -117,7 +117,7 @@ class Moderation(commands.Cog):
                 return
             if await self.bot.db.logs.find_one({"_id": guild.id}):
                 for user in (await self.bot.db.logs.find_one({"_id": guild.id})):
-                    if not user == "_id" and user.get("unbans") and user.get("unbans").get("time") and user.get("unbans").get("time") < datetime.datetime.now():
+                    if not user == "_id" and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unbans") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unbans").get("time") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unbans").get("time") < datetime.datetime.now():
                         await guild.unban(discord.Object(id=int(user)))
                         await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user.id}.unbans.time": ""}, "$inc": {f"{user.id}.unbans.unbans": 1}})
     @check_unban.before_loop
@@ -300,7 +300,7 @@ class Moderation(commands.Cog):
                 return
             if await self.bot.db.logs.find_one({"_id": guild.id}):
                 for user in await self.bot.db.logs.find_one({"_id": guild.id}):
-                    if not user == "_id" and user.get("unmutes") and user.get("unmutes").get("time") and user.get("unmutes").get("time") < datetime.datetime.now():
+                    if not user == "_id" and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unmutes") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unmutes").get("time") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unmutes").get("time") < datetime.datetime.now():
                         await (guild.get_member(int(user)).remove_roles(discord.utils.get(guild.roles, id=(await self.bot.db.settings.find_one({"_id": guild.id})).get("muted_role_id"))))
                         await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user.id}.unmutes.time": ""}, "$inc": {f"{user.id}.unmutes.unmutes": 1}})
     @check_unmute.before_loop
