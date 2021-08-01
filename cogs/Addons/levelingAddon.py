@@ -28,6 +28,8 @@ class Leveling(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author.bot:
+            return
         if (await self.bot.get_context(message)).valid:
             if not await self.bot.db.addons.find_one({"_id": message.guild.id}):
                 await self.bot.db.addons.insert_one({"_id": message.guild.id, "addons": []})
