@@ -119,7 +119,7 @@ class Moderation(commands.Cog):
                 for user in (await self.bot.db.logs.find_one({"_id": guild.id})):
                     if not user == "_id" and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unbans") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unbans").get("time") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unbans").get("time") < datetime.datetime.now():
                         await guild.unban(discord.Object(id=int(user)))
-                        await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user.id}.unbans.time": ""}, "$inc": {f"{user.id}.unbans.unbans": 1}})
+                        await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user}.unbans.time": ""}, "$inc": {f"{user}.unbans.unbans": 1}})
     @check_unban.before_loop
     async def before_unban(self):
         await self.bot.wait_until_ready()
@@ -287,7 +287,7 @@ class Moderation(commands.Cog):
             await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_chat_id": channel.id}})
         await ctx.send(embed=discord.Embed(title="User Muted", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
         await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {f"{user.id}.mutes": 1}, "$set": {f"{user.id}.unmutes.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}})
+        await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.mutes": 1}, "$set": {f"{user.id}.unmutes.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}})
     # ================================
     # ========= Mute Check ===========
     # ================================
@@ -302,7 +302,7 @@ class Moderation(commands.Cog):
                 for user in await self.bot.db.logs.find_one({"_id": guild.id}):
                     if not user == "_id" and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unmutes") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unmutes").get("time") and (await self.bot.db.logs.find_one({"_id": guild.id}))[user].get("unmutes").get("time") < datetime.datetime.now():
                         await (guild.get_member(int(user)).remove_roles(discord.utils.get(guild.roles, id=(await self.bot.db.settings.find_one({"_id": guild.id})).get("muted_role_id"))))
-                        await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user.id}.unmutes.time": ""}, "$inc": {f"{user.id}.unmutes.unmutes": 1}})
+                        await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user}.unmutes.time": ""}, "$inc": {f"{user}.unmutes.unmutes": 1}})
     @check_unmute.before_loop
     async def before_unmute(self):
         await self.bot.wait_until_ready()
