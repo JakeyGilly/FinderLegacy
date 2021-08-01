@@ -345,14 +345,16 @@ class Moderation(commands.Cog):
         if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
             await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
         if (await self.bot.db.logs.find_one({"_id": ctx.guild.id})).get(str(user.id)):
-            embed=discord.Embed(title=f"{user.name}'s Logs", colour=0x3DF270).add_field(name=f"{user.name} has", value=str((await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("bans") or 0)+" Bans\n"+str((await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("kicks") or 0)+" Kicks\n"+str((await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("mutes") or 0)+" Mutes\n"+str((await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("warns") or 0)+" Warns").add_field(name="Is muted", value=discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")) in user.roles).set_footer(text=f"FinderBot Version {info.version}")
-            if (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("unmutes") and discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")) in user.roles:
-                embed.add_field(name="Muted until", value=(await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("unmutes").get("time") or 0)
+            bans = (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("bans") or 0
+            kicks = (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("kicks") or 0
+            mutes = (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("mutes") or 0
+            warns = (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("warns") or 0
+            embed=discord.Embed(title=f"{user.name}'s Logs", colour=0x3DF270).add_field(name=f"{user.name} has", value=f"{bans} Ban{'s'[:bans^1]}\n{kicks} Kick{'s'[:kicks^1]}\n{mutes} Mute{'s'[:mutes^1]}\n{warns} Warn{'s'[:warns^1]}").add_field(name="Is muted", value=discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")) in user.roles, inline=False).set_footer(text=f"FinderBot Version {info.version}")
+            if (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("unmutes") and (await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)]["unmutes"].get("time") and discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")) in user.roles:
+                embed.add_field(name="Time till unmute", value=humanize_delta(relativedelta((await self.bot.db.logs.find_one({"_id": ctx.guild.id}))[str(user.id)].get("unmutes").get("time"), datetime.datetime.now())), inline=False)
         else:
             embed=discord.Embed(title=f"{user.name}'s Logs", colour=0x3DF270).add_field(name="This user has no logs", value="They are very good!").set_footer(text=f"FinderBot Version {info.version}")
         await ctx.send(embed=embed)
-    # ========================
-    
 
 
 
