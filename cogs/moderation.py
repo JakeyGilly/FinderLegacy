@@ -222,10 +222,10 @@ class Moderation(commands.Cog):
             await ctx.send(embed=discord.Embed(title="Muting Disabled", colour=0x3DF270, description="If you are a server administator you can enable the mute command in settings").set_footer(text=f"FinderBot Version {info.version}"))
             return
         if not (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id") or not discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")):
-            await ctx.guild.create_role(name="Muted", colour=discord.colour.Colour.dark_grey(), permissions=discord.permissions.Permissions(send_messages=False, read_messages=True))
+            role = await ctx.guild.create_role(name="Muted", colour=discord.colour.Colour.dark_grey(), permissions=discord.permissions.Permissions(send_messages=False, read_messages=True))
             for channel in ctx.guild.text_channels:
-                await channel.set_permissions(discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")), send_messages=False)
-            await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_role_id": discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")).id}})
+                await channel.set_permissions(role, send_messages=False)
+            await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_role_id": role.id}})
         if discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")) in user.roles:
             await ctx.send(embed=discord.Embed(title="User Already Muted", colour=0x3DF270).set_footer(text=f"FinderBot Version {info.version}"))
             return
