@@ -5,3 +5,4 @@ requests
 aiohttp
 Pillow
 discord-components
+motor
