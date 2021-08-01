@@ -6,3 +6,4 @@ aiohttp
 Pillow
 discord-components
 motor
+dnspython
