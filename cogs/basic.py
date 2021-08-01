@@ -154,7 +154,7 @@ class Basic(commands.Cog):
     # ==================================
     @commands.command(name="donate", aliases=["support"])
     async def donate(self,ctx):
-        link = 'https://givememoney.com'
+        link = 'https://paypal.com/donate?hosted_button_id=8ZP8UT4W634G8'
         await ctx.send(embed=discord.Embed(title="Donate").add_field(name="Donate to FinderBot", value=f"You can donate to FinderBot here: {link}").set_footer(text=f"FinderBot {info.version}"))
     # ============================================
 
