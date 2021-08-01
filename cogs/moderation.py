@@ -52,6 +52,8 @@ class Moderation(commands.Cog):
     async def ban(self, ctx, user: commands.MemberConverter, *, reason="No Reason Provided"):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+            await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
         if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Banning Disabled", colour=0x3DF270).add_field(name="You can ban the user manually or contact the server owner", value="You can enable the ban command by changing the settings", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             return
@@ -68,8 +70,8 @@ class Moderation(commands.Cog):
             await ctx.guild.ban(user, reason=reason)
             await confirm.edit(embed=discord.Embed(title="User Banned", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-                await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-            await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {"users.$.bans": 1}}) if await self.bot.db.logs.find_one({"_id": ctx.guild.id, "users": {"$elemMatch": {"id": user.id}}}) else await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$push": {"users": {"id": user.id, "bans": 1}}})
+                await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+            await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.bans": 1}})  
     # ===============================
 
 
@@ -83,7 +85,9 @@ class Moderation(commands.Cog):
     async def tempban(self, ctx, user: commands.MemberConverter, time, *, reason="No Reason Provided"):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+            await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Banning Disabled", colour=0x3DF270).add_field(name="You can ban the user manually or contact the server owner", value="You can enable the ban command by changing the settings", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             return
         confirm = await ctx.send(embed=discord.Embed(title="Are you sure you want to tempban this user?", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for time", value=f"{time}", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
@@ -98,21 +102,24 @@ class Moderation(commands.Cog):
             await user.send(embed=discord.Embed(title=f"You have been temp banned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}").set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
             await ctx.guild.ban(user, reason=reason)
             await confirm.edit(embed=discord.Embed(title="User Temp Banned", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-            if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-                await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-            await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {"users.$.bans": 1}, "$set": {"users.$.unbans.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}}) if await self.bot.db.logs.find_one({"_id": ctx.guild.id, "users": {"$elemMatch": {"id": user.id}}}) else await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$push": {"users": {"id": user.id, "bans": 1, "unbans": {"time": datetime.datetime.now() + await DurationDelta.convert(self, time)}}}})
+            await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.bans": 1}, "$set": {f"{user.id}.unbans.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}}) 
+    
+    
+    # =========================================
+    # =============== Ban Check ===============
+    # =========================================
     @tasks.loop(seconds=5.0)
     async def check_unban(self):
         for guild in self.bot.guilds:
             if not await self.bot.db.settings.find_one({"_id": guild.id}):
                 await self.bot.db.settings.insert_one({"_id": guild.id})
-            elif (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules"):
+            if (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules"):
                 return
             if await self.bot.db.logs.find_one({"_id": guild.id}):
-                for user in (await self.bot.db.logs.find_one({"_id": guild.id})).get("users"):
-                    if user.get("unbans") and user.get("unbans").get("time") and user.get("unbans").get("time") < datetime.datetime.now():
-                        await guild.unban(discord.Object(id=user["id"]))
-                        await self.bot.db.logs.update_one({"_id": guild.id, "users.id": user["id"]}, {"$unset": {"users.$.unbans.time": ""}, "$inc": {"users.$.unbans.unbans": 1}})
+                for user in (await self.bot.db.logs.find_one({"_id": guild.id})):
+                    if not user == "_id" and user.get("unbans") and user.get("unbans").get("time") and user.get("unbans").get("time") < datetime.datetime.now():
+                        await guild.unban(discord.Object(id=int(user)))
+                        await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user.id}.unbans.time": ""}, "$inc": {f"{user.id}.unbans.unbans": 1}})
     @check_unban.before_loop
     async def before_unban(self):
         await self.bot.wait_until_ready()
@@ -129,7 +136,9 @@ class Moderation(commands.Cog):
     async def unban(self, ctx, user: BannedUser):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+                await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "ban" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Banning Disabled", colour=0x3DF270).add_field(name="You can ban the user manually or contact the server owner", value="You can enable the ban command by changing the settings", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             return
         confirm = await ctx.send(embed=discord.Embed(title="Are you sure you want to unban this user?", colour=0x3DF270).add_field(name="User", value=user, inline=False).set_footer(text=f"FinderBot Version {info.version}"))
@@ -143,9 +152,7 @@ class Moderation(commands.Cog):
         else:
             await ctx.guild.unban(user)
             await confirm.edit(embed=discord.Embed(title="User Unbanned", colour=0x3DF270).add_field(name="User", value=user, inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-            if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-                await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-            await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$unset": {"users.$.unbans.time": ""}, "$inc": {"users.$.unbans.unbans": 1}})
+            await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$unset": {f"{user.id}.unbans.time": ""}, "$inc": {f"{user.id}.unbans.unbans": 1}})
     # =================================
 
 
@@ -159,7 +166,9 @@ class Moderation(commands.Cog):
     async def kick(self, ctx, user: commands.MemberConverter, *, reason="No Reason Provided"):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "kick" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+                await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "kick" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Kicking Disabled", colour=0x3DF270).add_field(name="You can kick the user manually or contact the server owner", value="You can enable the kick command by changing the settings", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
             return
         confirm = await ctx.send(embed=discord.Embed(title="Are you sure you want to kick this user?", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
@@ -174,9 +183,7 @@ class Moderation(commands.Cog):
             await user.send(embed=discord.Embed(title="You have been kicked", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}").set_thumbnail(url=ctx.guild.icon_url))
             await ctx.guild.kick(user, reason=reason)
             await confirm.edit(embed=discord.Embed(title="User Kicked", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-            if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-                await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-            await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {"users.$.kicks": 1}}) if await self.bot.db.logs.find_one({"_id": ctx.guild.id, "users": {"$elemMatch": {"id": user.id}}}) else await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$push": {"users": {"id": user.id, "kicks": 1}}})
+            await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.kicks": 1}})
     # ================================
 
 
@@ -190,14 +197,14 @@ class Moderation(commands.Cog):
     async def warn(self, ctx, user: commands.MemberConverter, *, reason="No Reason Provided"):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "warn" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+            await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "warn" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Warning Disabled", colour=0x3DF270, description="If you are a server administator you can enable the warn command in settings").set_footer(text=f"FinderBot Version {info.version}"))
             return
         await ctx.send(embed=discord.Embed(title="User Warned", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
         await user.send(embed=discord.Embed(title="You Have Been Warned", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-            await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-        await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {"users.$.warns": 1}}) if await self.bot.db.logs.find_one({"_id": ctx.guild.id, "users": {"$elemMatch": {"id": user.id}}}) else await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$push": {"users": {"id": user.id, "warns": 1}}})
+        await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.warns": 1}})
     # ================================
 
     # ================================
@@ -209,7 +216,9 @@ class Moderation(commands.Cog):
     async def mute(self, ctx, user: commands.MemberConverter, *, reason="No Reason Specified"):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "mute" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+            await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "mute" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Muting Disabled", colour=0x3DF270, description="If you are a server administator you can enable the mute command in settings").set_footer(text=f"FinderBot Version {info.version}"))
             return
         if not (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id") or not discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")):
@@ -226,15 +235,16 @@ class Moderation(commands.Cog):
             await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_chat_id": channel.id}})
         await ctx.send(embed=discord.Embed(title="User Muted", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
         await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-            await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-        await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {"users.$.mutes": 1}}) if await self.bot.db.logs.find_one({"_id": ctx.guild.id, "users": {"$elemMatch": {"id": user.id}}}) else await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$push": {"users": {"id": user.id, "mutes": 1}}})
+        await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$inc": {f"{user.id}.mutes": 1}})
+    # ================================
+    # ========= Mute Perms ===========
+    # ================================
     @tasks.loop(seconds=5.0)
     async def mute_perms(self):
         for guild in self.bot.guilds:
             if not await self.bot.db.settings.find_one({"_id": guild.id}):
                 await self.bot.db.settings.insert_one({"_id": guild.id})
-            elif (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules") and not "mute" in (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules"):
+            if (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules") and not "mute" in (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules"):
                 return
             for channel in guild.text_channels:
                 if discord.utils.get(guild.roles, id=(await self.bot.db.settings.find_one({"_id": guild.id})).get("muted_role_id")):
@@ -258,7 +268,9 @@ class Moderation(commands.Cog):
     async def tempmute(self, ctx, user: commands.MemberConverter, time, *, reason="No Reason Specified"):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "mute" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+            await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "mute" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Muting Disabled", colour=0x3DF270, description="If you are a server administator you can enable the mute command in settings").set_footer(text=f"FinderBot Version {info.version}"))
             return
         if not (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id") or not discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")):
@@ -275,21 +287,22 @@ class Moderation(commands.Cog):
             await self.bot.db.settings.update_one({"_id": ctx.guild.id}, {"$set": {"muted_chat_id": channel.id}})
         await ctx.send(embed=discord.Embed(title="User Muted", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).add_field(name="for time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="for reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
         await user.send(embed=discord.Embed(title="You Have Been Muted", colour=0x3DF270).add_field(name="Server", value=f"{ctx.guild.name}", inline=False).add_field(name="Time", value=f"{humanize_delta(await DurationDelta.convert(self, time))}", inline=False).add_field(name="Reason", value=f"{reason}", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-            await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-        await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {"users.$.mutes": 1}, "$set": {"users.$.unmutes.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}}) if await self.bot.db.logs.find_one({"_id": ctx.guild.id, "users": {"$elemMatch": {"id": user.id}}}) else await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$push": {"users": {"id": user.id, "mutes": 1, "unmutes": {"time": datetime.datetime.now() + await DurationDelta.convert(self, time)}}}})
+        await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$inc": {f"{user.id}.mutes": 1}, "$set": {f"{user.id}.unmutes.time": datetime.datetime.now() + await DurationDelta.convert(self, time)}})
+    # ================================
+    # ========= Mute Check ===========
+    # ================================
     @tasks.loop(seconds=5.0)
     async def check_unmute(self):
         for guild in self.bot.guilds:
             if not await self.bot.db.settings.find_one({"_id": guild.id}):
                 await self.bot.db.settings.insert_one({"_id": guild.id})
-            elif (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules") and not "mute" in (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules"):
+            if (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules") and not "mute" in (await self.bot.db.settings.find_one({"_id": guild.id})).get("disabled_mod_modules"):
                 return
             if await self.bot.db.logs.find_one({"_id": guild.id}):
-                for user in (await self.bot.db.logs.find_one({"_id": guild.id})).get("users"):
-                    if user.get("unmutes") and user.get("unmutes").get("time") and user.get("unmutes").get("time") < datetime.datetime.now():
-                        await (guild.get_member(user.get("id")).remove_roles(discord.utils.get(guild.roles, id=(await self.bot.db.settings.find_one({"_id": guild.id})).get("muted_role_id"))))
-                        await self.bot.db.logs.update_one({"_id": guild.id, "users.id": user["id"]}, {"$unset": {"users.$.unmutes.time": ""}, "$inc": {"users.$.unmutes.unmutes": 1}})
+                for user in await self.bot.db.logs.find_one({"_id": guild.id}):
+                    if not user == "_id" and user.get("unmutes") and user.get("unmutes").get("time") and user.get("unmutes").get("time") < datetime.datetime.now():
+                        await (guild.get_member(int(user)).remove_roles(discord.utils.get(guild.roles, id=(await self.bot.db.settings.find_one({"_id": guild.id})).get("muted_role_id"))))
+                        await self.bot.db.logs.update_one({"_id": guild.id}, {"$unset": {f"{user.id}.unmutes.time": ""}, "$inc": {f"{user.id}.unmutes.unmutes": 1}})
     @check_unmute.before_loop
     async def before_unmute(self):
         await self.bot.wait_until_ready()
@@ -306,15 +319,15 @@ class Moderation(commands.Cog):
     async def unmute(self, ctx, user: commands.MemberConverter):
         if not await self.bot.db.settings.find_one({"_id": ctx.guild.id}):
             await self.bot.db.settings.insert_one({"_id": ctx.guild.id})
-        elif (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "mute" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
+        if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
+            await self.bot.db.logs.insert_one({"_id": ctx.guild.id})
+        if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules") and "mute" in (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("disabled_mod_modules"):
             await ctx.send(embed=discord.Embed(title="Muting Disabled", colour=0x3DF270, description="If you are a server administator you can enable the mute command in settings").set_footer(text=f"FinderBot Version {info.version}"))
             return
         if (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id") and discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")) in user.roles:
             await user.remove_roles(discord.utils.get(ctx.guild.roles, id=(await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("muted_role_id")))
             await ctx.send(embed=discord.Embed(title="User Unmuted", colour=0x3DF270).add_field(name="User", value=f"{user.mention} ({user})", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
-            if not await self.bot.db.logs.find_one({"_id": ctx.guild.id}):
-                await self.bot.db.logs.insert_one({"_id": ctx.guild.id, "users": []})
-            await self.bot.db.logs.update_one({"_id": ctx.guild.id, "users.id": user.id}, {"$unset": {"users.$.unmutes.time": ""}, "$inc": {"users.$.unmutes.unmutes": 1}})
+            await self.bot.db.logs.update_one({"_id": ctx.guild.id}, {"$unset": {f"{user.id}.unmutes.time": ""}, "$inc": {f"{user.id}.unmutes.unmutes": 1}})
         else:
             await ctx.send(embed=discord.Embed(title="User Not Muted", colour=0x3DF270, description=f"{user.name} was unmuted by a moderator or was not muted").add_field(name="User", value=f"{user.mention} ({user})", inline=False).set_footer(text=f"FinderBot Version {info.version}"))
     # =================================
