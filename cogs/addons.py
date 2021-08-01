@@ -4,7 +4,7 @@ import discord, info, discord_components
 supported_addons = {'code': 'Code', 'economy': 'Economy', 'tictactoe': 'TicTacToe', 'leveling': 'Leveling', "tickets": 'Ticket', "rockpaperscissors": 'RockPaperScissors'}
 
 class Addons(commands.Cog):
-    """Adds optional features to the server"""
+    """Adds optional features to the server\nIndividual addons help can be found in addon info command"""
     def __init__(self, bot):
         self.bot = bot
 
