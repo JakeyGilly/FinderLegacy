@@ -21,6 +21,7 @@ def humanize_delta(delta: relativedelta) -> str:
     return ", ".join(time_strings)
 
 class Basic(commands.Cog):
+    """Some basic commands."""
     def __init__(self, bot):
         self.bot = bot
         self.giveaway_check.start()

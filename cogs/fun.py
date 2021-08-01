@@ -4,6 +4,7 @@ import random
 from discord.ext import commands
 
 class Fun(commands.Cog):
+    """Fun commands."""
     def __init__(self, bot):
         self.bot = bot
     

@@ -35,6 +35,7 @@ class BannedUser(commands.Converter):
                 raise commands.UserNotFound(user_id)
 
 class Moderation(commands.Cog):
+    """Moderation commands."""
     def __init__(self, bot):
         self.bot = bot
         self.check_unban.start()
