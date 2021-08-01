@@ -4,6 +4,7 @@ import discord, info, discord_components
 supported_addons = {'code': 'Code', 'economy': 'Economy', 'tictactoe': 'TicTacToe', 'leveling': 'Leveling', "tickets": 'Ticket', "rockpaperscissors": 'RockPaperScissors'}
 
 class Addons(commands.Cog):
+    """Adds optional features to the server"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -12,7 +13,7 @@ class Addons(commands.Cog):
         discord_components.DiscordComponents(self.bot)
 
     @commands.guild_only()
-    @commands.group(name="addon", aliases=["addons", "plugin", "mod"])
+    @commands.group(name="addon", aliases=["addons", "plugin", "mod"], help="Command for managing addons")
     @commands.has_permissions(administrator=True)
     async def addon(self, ctx):
         if ctx.invoked_subcommand is None:

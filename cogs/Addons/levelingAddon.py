@@ -47,7 +47,7 @@ class Leveling(commands.Cog):
                     await message.channel.send(f"{message.author.mention}, you are now level "+str((await self.bot.db.leveling.find_one({"_id": message.guild.id})).get(str(message.author.id)).get('level'))+"!")
 
 
-    @commands.command(name="rank", aliases=["lvl", "level"])
+    @commands.command(name="rank", aliases=["lvl", "level"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def rank(self, ctx, user: commands.MemberConverter = None):

@@ -20,7 +20,7 @@ class Ticket(commands.Cog):
     # =====================================
     # ============= Ticketing =============
     # =====================================
-    @commands.command(name='ticket', aliases=['tickets', "question"])
+    @commands.command(name='ticket', aliases=['tickets', "question"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def ticket(self, ctx):

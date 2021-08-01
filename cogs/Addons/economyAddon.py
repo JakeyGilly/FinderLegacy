@@ -29,7 +29,7 @@ class Economy(commands.Cog):
             return True
         return False
 
-    @commands.command(name="bal", aliases=["balance", "money", "bank", "account", "moneybag", "wallet"])
+    @commands.command(name="bal", aliases=["balance", "money", "bank", "account", "moneybag", "wallet"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def money(self, ctx, user: discord.Member = None):
@@ -45,7 +45,7 @@ class Economy(commands.Cog):
         EcoSymbol = (await self.bot.db.settings.find_one({"_id": ctx.guild.id})).get("economy_symbol") or "$"
         await ctx.send(embed=discord.Embed(title=f"{ctx.author.name if not user else user.name}'s money", color=0xffff00).add_field(name="Bank", value=f"{EcoSymbol}{bank}", inline=False).add_field(name="Wallet", value=f"{EcoSymbol}{wallet}", inline=False).set_footer(text=f"FinderBot {info.version}"))
         
-    @commands.command(name="ecosymbol", aliases=["changeecosymbol", "changeeco"])
+    @commands.command(name="ecosymbol", aliases=["changeecosymbol", "changeeco"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     @commands.has_permissions(manage_guild=True)
@@ -56,7 +56,7 @@ class Economy(commands.Cog):
         await ctx.send(embed=discord.Embed(title="Success", color=0x008000).add_field(name="Prefix changed to", value=symbol, inline=False).set_footer(text=f"FinderBot {info.version}"))
         
     @commands.cooldown(1, 30, commands.BucketType.user)
-    @commands.command(name="beg", aliases=["plead"])
+    @commands.command(name="beg", aliases=["plead"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def beg(self, ctx):
@@ -70,7 +70,7 @@ class Economy(commands.Cog):
         self.bot.db.economy.update_one({"_id": ctx.guild.id}, {"$inc": {f"{ctx.author.id}.wallet": money}}, upsert=True)
         await ctx.send(embed=discord.Embed(title=f"Beg", color=0xffff00).add_field(name=f"You have begged to {random.choice(beggers)}", value=f"and received {EcoSymbol}{money}", inline=True).set_footer(text=f"FinderBot {info.version}"))
 
-    @commands.command(name="daily")
+    @commands.command(name="daily", hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def daily(self, ctx):
@@ -87,7 +87,7 @@ class Economy(commands.Cog):
         await self.bot.db.economy.update_one({"_id": ctx.guild.id}, {"$set": {str(ctx.author.id)+".dailyCooldown": datetime.datetime.now()+datetime.timedelta(days=1)}, "$inc": {str(ctx.author.id)+".wallet": money}})
         await ctx.send(embed=discord.Embed(title=f"Daily", color=0xffff00).add_field(name=f"You have received {EcoSymbol}{money}", value=f"You can use your daily again in {humanize_delta(relativedelta(datetime.datetime.now()+datetime.timedelta(days=1), datetime.datetime.now()))}.", inline=False).set_footer(text=f"FinderBot {info.version}"))
     
-    @commands.command(name="deposit")
+    @commands.command(name="deposit", hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def deposit(self, ctx, amount):
@@ -107,7 +107,7 @@ class Economy(commands.Cog):
             wallet = (await self.bot.db.economy.find_one({"_id": ctx.guild.id}))[str(ctx.author.id)].get('wallet') or 0
         await ctx.send(embed=discord.Embed(title=f"Deposit", color=0xffff00).add_field(name=f"You have deposited {EcoSymbol}{amount}.", value=f"You now have {EcoSymbol}{wallet} in your wallet.", inline=False).set_footer(text=f"FinderBot {info.version}"))
     
-    @commands.command(name="withdraw", aliases=["withdrawal"])
+    @commands.command(name="withdraw", aliases=["withdrawal"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def withdraw(self, ctx, amount):
@@ -159,7 +159,7 @@ class Economy(commands.Cog):
     #         await ctx.send(embed=discord.Embed(title="You already robbed recently!", color=discord.colour.Colour.blue()).add_field(name="Command is on cooldown", value=f"Come back in {humanize_delta(relativedelta(datetime.datetime.now()+datetime.timedelta(days=1)))} mins", inline=True).set_footer(text=f"FinderBot {info.version}"))
 
     
-    @commands.command(name="gamble", aliases=["casino"])
+    @commands.command(name="gamble", aliases=["casino"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def gamble(self, ctx, amount=100):
@@ -179,7 +179,7 @@ class Economy(commands.Cog):
                 await ctx.send(embed=discord.Embed(title="Gamble", color=0xff0000).add_field(name=f"You lost {EcoSymbol}{-reward}", value=f"You now have {EcoSymbol}"+str(((await self.bot.db.economy.find_one({"_id": ctx.guild.id}))[str(ctx.author.id)].get("wallet") or 0)+(reward-int(amount))), inline=False).set_footer(text=f"FinderBot {info.version}"))
             await self.bot.db.economy.update_one({"_id": ctx.guild.id}, {"$inc" : {str(ctx.author.id)+".wallet": reward-int(amount)}})
 
-    @commands.command(name="pay", aliases=["gift", "give"])
+    @commands.command(name="pay", aliases=["gift", "give"], hidden=True)
     @commands.guild_only()
     @commands.check(is_addon_server)
     async def pay(self, ctx, user: discord.Member, amount):

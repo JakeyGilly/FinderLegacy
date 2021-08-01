@@ -29,15 +29,66 @@ class Basic(commands.Cog):
     # # ================================
     # # ============= Help =============
     # # ================================
-    @commands.command(name="help", aliases=["h"])
-    async def help(self, ctx):
-        await ctx.send(embed=discord.Embed(title="FinderBot Help").add_field(name="To get help with FinderBot Bot go to", value=f"https://github.com/FinderDiscord/FinderDocs").set_footer(text=f"FinderBot {info.version}"))
+    # @commands.command(name="help", aliases=["h"])
+    # async def help(self, ctx):
+    #     await ctx.send(embed=discord.Embed(title="FinderBot Help").add_field(name="To get help with FinderBot Bot go to", value=f"https://github.com/FinderDiscord/FinderDocs").set_footer(text=f"FinderBot {info.version}"))
     # # ================================
+    
+    
+    # ================================
+    # ============= Help =============
+    # ================================
+    @commands.command(name='help', aliases=['h'], help='Sends this help message')
+    async def help(self, ctx, input=None):
+        if not input:
+            emb = discord.Embed(title='FinderBot Help', description=f'Commands and Modules\nUse `{ctx.prefix}help <module>` to gain more information about that module').set_footer(text=f"FinderBot {info.version}")
+            cogs_desc = ''
+            for cog in self.bot.cogs:
+                i = 0
+                for command in self.bot.get_cog(cog).get_commands():
+                    if not command.hidden:
+                        i += 1
+                if i > 0:
+                    cogs_desc += f'`{cog}` {self.bot.cogs[cog].__doc__}\n'
+            emb.add_field(name='Modules', value=cogs_desc, inline=False)
+            commands_desc = ''
+            for command in self.bot.walk_commands():
+                if not command.cog_name and not command.hidden:
+                    commands_desc += f'{command.name} - {command.help}\n'
+            if commands_desc:
+                emb.add_field(name='Not belonging to a module', value=commands_desc, inline=False)
+        else:
+            for cog in self.bot.cogs:
+                if cog.lower() == input.lower():
+                    emb = discord.Embed(title=f'FinderBot Help', description=f"{cog} - Commands\n**{self.bot.cogs[cog].__doc__}**")
+                    h = 0
+                    for command in self.bot.get_cog(cog).get_commands():
+                        commandss = ""
+                        aliases = ""
+                        if not command.hidden:
+                            h += 1
+                            if isinstance(command, commands.Group):
+                                for j in command.walk_commands():
+                                    commandss += f"{ctx.prefix}{j}\n"
+                            for i in command.aliases:
+                                aliases += f"{i}, "
+                            aliases = aliases[:-2]
+                        if h != 0:
+                            if not commandss:        
+                                emb.add_field(name=f"`{ctx.prefix}{command.name}` Aliases: {aliases}", value=f"{command.help}", inline=False)
+                            else:
+                                emb.add_field(name=f"`{ctx.prefix}{command.name}` Aliases: {aliases}", value=f"{command.help}\n\nSubcommands\n`{commandss}`", inline=False)
+                        else:
+                            emb = discord.Embed(title=f'{input} - Commands', description=f'No such module exists', color=discord.Color.red())
+                    break
+            else:
+                emb = discord.Embed(title=f'{input} - Commands', description=f'No such module exists', color=discord.Color.red())
+        await ctx.send(embed=emb)
 
     # ==========================================
     # ============= Reaction Roles =============
     # ==========================================
-    @commands.command(name="reactionroles", aliases=["rr, reactrole", "reactroles", "reactionrole"])
+    @commands.command(name="reactionroles", aliases=["rr, reactrole", "reactroles", "reactionrole"], help="Create a reaction role so users can add roles.")
     @commands.guild_only()
     async def reactrole(self, ctx, role: discord.Role, emoji):
         if ctx.guild.me.top_role > role:
@@ -63,7 +114,7 @@ class Basic(commands.Cog):
     # =================================
     # ============= About =============
     # =================================
-    @commands.command(name="about", aliases=["info", "information", "i"])
+    @commands.command(name="about", aliases=["info", "information", "i"], help="Get information about FinderBot.")
     async def about(self, ctx):
         await ctx.send(embed=discord.Embed(title="FinderBot", color=0x1D93FF).set_author(name="About FinderBot").set_thumbnail(url="https://upload.wikimedia.org/wikipedia/commons/c/c9/FinderBot_Icon_macOS_Big_Sur.png").add_field(name="The Macintosh Desktop Experience", value="Created by FinderTeam").set_footer(text=f"FinderBot {info.version}\n{info.web}"))
     # =================================
@@ -73,7 +124,7 @@ class Basic(commands.Cog):
     # ====================================
     # ============= Giveaway =============
     # ====================================
-    @commands.command(name="giveaway")
+    @commands.command(name="giveaway", help="Create a giveaway that users can enter into.")
     async def giveaway(self, ctx, time, winners: int, prize):
         if datetime.datetime.now() + await DurationDelta.convert(self, time) > datetime.datetime.now()+relativedelta(days=90):
             await ctx.send(embed=discord.Embed(title="Giveaway", color=0xff0000).add_field(name="Too long", value="The giveaway has to be shorter than 90 days.").set_footer(text=f"FinderBot {info.version}"))
@@ -122,7 +173,7 @@ class Basic(commands.Cog):
     # ========================================
     # ============= Dice Rolling =============
     # ========================================
-    @commands.command(name="roll", aliases=["dice", "diceroll"])
+    @commands.command(name="roll", aliases=["dice", "diceroll"], help="Roll a dice.")
     async def diceroll(self, ctx, rolls: int = 1):
         if rolls < 100:
             roll1, roll2, roll3, roll4, roll5, roll6, total = 0, 0, 0, 0, 0, 0, 0
@@ -152,7 +203,7 @@ class Basic(commands.Cog):
     # ==================================
     # ============= Donate =============
     # ==================================
-    @commands.command(name="donate", aliases=["support"])
+    @commands.command(name="donate", aliases=["support"], help="Donate to the bot.")
     async def donate(self,ctx):
         link = 'https://paypal.com/donate?hosted_button_id=8ZP8UT4W634G8'
         await ctx.send(embed=discord.Embed(title="Donate").add_field(name="Donate to FinderBot", value=f"You can donate to FinderBot here: {link}").set_footer(text=f"FinderBot {info.version}"))
@@ -161,7 +212,7 @@ class Basic(commands.Cog):
     # ===================================
     # ============= Version =============
     # ===================================
-    @commands.command(name="version", aliases=["changelog"])
+    @commands.command(name="version", aliases=["changelog"], help="Check the changelog.")
     async def version(self,ctx):
         f = open('CHANGELOG', 'r')
         await ctx.send(embed=discord.Embed(title="Version", color=0x8FCB95).add_field(name=f"Latest Changelog for FinderBot {info.version}", value=f'```{f.read()}```', inline=True).set_footer(text=f"FinderBot {info.version}"))
@@ -172,7 +223,7 @@ class Basic(commands.Cog):
     # =======================================
     # ============= Flip a coin =============
     # =======================================
-    @commands.command(name="flip", aliases=["coin", "flipcoin", "headsortails", "coinflip"])
+    @commands.command(name="flip", aliases=["coin", "flipcoin", "headsortails", "coinflip"], help="Flip a coin.")
     async def coinflip(self, ctx, flips: int = 1):
         heads = 0
         tails = 0

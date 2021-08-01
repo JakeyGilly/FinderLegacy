@@ -2,6 +2,7 @@ from discord.ext import commands
 import discord, info, asyncio
 
 class Admin(commands.Cog):
+    """Admin commands that help manage the server."""
     def __init__(self, bot):
         self.bot = bot
 
@@ -9,7 +10,7 @@ class Admin(commands.Cog):
     # =========================================
     # ============= Change Prefix =============
     # =========================================
-    @commands.command(name='prefix', aliases=['prefixes', "changeprefix"])
+    @commands.command(name='prefix', aliases=['prefixes', "changeprefix"], help="Change the prefix of the bot.")
     @commands.guild_only()
     @commands.has_permissions(manage_guild=True)
     async def changeprefix(self, ctx, symbol):
@@ -22,7 +23,7 @@ class Admin(commands.Cog):
     # ===========================================
     # ============= Delete Messages =============
     # ===========================================
-    @commands.command(name='purge', aliases=['delete', 'clear', 'deletemessage', 'deletemessages'])
+    @commands.command(name='purge', aliases=['delete', 'clear', 'deletemessage', 'deletemessages'], help="Delete messages from the channel.")
     @commands.guild_only()
     @commands.has_permissions(manage_channels=True)
     async def clear(self, ctx, messagenum: int, user: commands.MemberConverter=None):
@@ -52,7 +53,7 @@ class Admin(commands.Cog):
     # ====================================
     # ============= Slowmode =============
     # ====================================
-    @commands.command(name='slowmode', aliases=['slow', 'delay'])
+    @commands.command(name='slowmode', aliases=['slow', 'delay'], help="Change the slowmode speed of the channel.")
     @commands.guild_only()
     @commands.has_permissions(manage_channels=True)
     async def slowmode(self, ctx, seconds:int=None):
@@ -70,7 +71,7 @@ class Admin(commands.Cog):
     # =======================================
     # ============= Voting/Poll =============
     # =======================================
-    @commands.command(name='poll', aliases=['vote', 'polls', 'polling', 'voting'])
+    @commands.command(name='poll', aliases=['vote', 'polls', 'polling', 'voting'], help="Create a poll that users can vote on.")
     @commands.guild_only()
     async def vote(self, ctx, question: str, options: str):
         emojis=["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟", "🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬"]

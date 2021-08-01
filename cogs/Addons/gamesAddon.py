@@ -22,7 +22,7 @@ class TicTacToe(commands.Cog):
 
     @commands.guild_only()
     @is_addon__server("tictactoe")
-    @commands.command(name="tictactoe", aliases=["ttt"])
+    @commands.command(name="tictactoe", aliases=["ttt"], hidden=True)
     async def tictactoe(self, ctx, player: discord.Member=None):
         if player is None:
             await ctx.send(discord.Embed(title="TicTacToe").add_field(name="No player present!", value=f"Please specify a player to play against", inline=False).set_footer(text=f"FinderBot {info.version}"))
@@ -185,7 +185,7 @@ class RockPaperScissors(commands.Cog):
 
     @is_addon__server("rockpaperscissors")
     @commands.guild_only()
-    @commands.command(name="rockpaperscissors", aliases=["rps"])
+    @commands.command(name="rockpaperscissors", aliases=["rps"], hidden=True)
     async def rockpaperscissors(self, ctx, user: discord.Member=None):
         if user is None:
             await ctx.send(embed=discord.Embed(title="Rock Paper Scissors").add_field(name="No player present!", value=f"Please specify a player to play against", inline=False).set_footer(text=f"FinderBot {info.version}"))

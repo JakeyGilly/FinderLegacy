@@ -25,7 +25,7 @@ class Code(commands.Cog):
     # ========================================
     # ============= Code Command =============
     # ========================================
-    @commands.command(name="code", aliases=["program", "execute", "run", "compile"])
+    @commands.command(name="code", aliases=["program", "execute", "run", "compile"], hidden=True)
     @commands.check(is_addon_server)
     async def code(self, ctx, language, *, code):
         if re.match(re.compile(f"(?s){ctx.prefix}(?:edit_last_)?code(?: +(?P<language>\S*)\s*|\s*)(?:\n(?P<args>(?:[^\n\r\f\v]*\n)*?)\s*|\s*)```(?:(?P<syntax>\S+)\n\s*|\s*)(?P<source>.*)```(?:\n?(?P<stdin>(?:[^\n\r\f\v]\n?)+)+|)"), ctx.message.content):

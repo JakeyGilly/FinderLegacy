@@ -48,7 +48,7 @@ class Moderation(commands.Cog):
     # ===============================
     # ============= Ban =============
     # ===============================
-    @commands.command(name="ban", aliases=["b"])
+    @commands.command(name="ban", aliases=["b"], help="Bans a user from the server.")
     @commands.guild_only()
     @commands.has_permissions(ban_members=True)
     async def ban(self, ctx, user: commands.MemberConverter, *, reason="No Reason Provided"):
@@ -81,7 +81,7 @@ class Moderation(commands.Cog):
     # ====================================
     # ============= Temp Ban =============
     # ====================================
-    @commands.command(name="tempban", aliases=["temporaryban", "tempb", "tb", "tban"])
+    @commands.command(name="tempban", aliases=["temporaryban", "tempb", "tb", "tban"], help="Temporarily ban a user from the server.")
     @commands.guild_only()
     @commands.has_permissions(ban_members=True)
     async def tempban(self, ctx, user: commands.MemberConverter, time, *, reason="No Reason Provided"):
@@ -132,7 +132,7 @@ class Moderation(commands.Cog):
     # =================================
     # ============= Unban =============
     # =================================
-    @commands.command(name="unban", aliases=["unb", "ub"])
+    @commands.command(name="unban", aliases=["unb", "ub"], help="Unbans a user from the server")
     @commands.guild_only()
     @commands.has_permissions(ban_members=True)
     async def unban(self, ctx, user: BannedUser):
@@ -162,7 +162,7 @@ class Moderation(commands.Cog):
     # ================================
     # ============= Kick =============
     # ================================
-    @commands.command(name="kick", aliases=["k", "boot"])
+    @commands.command(name="kick", aliases=["k", "boot"], help="Kicks a user from the server")
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
     async def kick(self, ctx, user: commands.MemberConverter, *, reason="No Reason Provided"):
@@ -193,7 +193,7 @@ class Moderation(commands.Cog):
     # ================================
     # ============= Warn =============
     # ================================
-    @commands.command(name="warn", aliases=["w", "warning"])
+    @commands.command(name="warn", aliases=["w", "warning"], help="Warns a user")
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
     async def warn(self, ctx, user: commands.MemberConverter, *, reason="No Reason Provided"):
@@ -212,7 +212,7 @@ class Moderation(commands.Cog):
     # ================================
     # ============= Mute =============
     # ================================
-    @commands.command(name="mute", aliases=["m"])
+    @commands.command(name="mute", aliases=["m"], help="Mutes a user")
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
     async def mute(self, ctx, user: commands.MemberConverter, *, reason="No Reason Specified"):
@@ -264,7 +264,7 @@ class Moderation(commands.Cog):
     # =====================================
     # ============= Temp mute =============
     # =====================================
-    @commands.command(name="tempmute", aliases=["tm", "tempm", "tmute", "temporarymute"])
+    @commands.command(name="tempmute", aliases=["tm", "tempm", "tmute", "temporarymute"], help="Temporarily Mutes a user")
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
     async def tempmute(self, ctx, user: commands.MemberConverter, time, *, reason="No Reason Specified"):
@@ -315,7 +315,7 @@ class Moderation(commands.Cog):
     # =================================
     # ============= Unmute =============
     # =================================
-    @commands.command(name="unmute", aliases=["unm", "um"])
+    @commands.command(name="unmute", aliases=["unm", "um"], help="Unmute a user")
     @commands.guild_only()
     @commands.has_permissions(kick_members=True)
     async def unmute(self, ctx, user: commands.MemberConverter):
@@ -337,7 +337,7 @@ class Moderation(commands.Cog):
     # ========================
     # ========= Logs =========
     # ========================
-    @commands.command(name="logs", aliases=["log"])
+    @commands.command(name="logs", aliases=["log"], help="View the infractions of a user")
     @commands.guild_only()
     async def logs(self, ctx, user: commands.MemberConverter=None):
         if user is None:
