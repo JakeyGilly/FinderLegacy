@@ -23,7 +23,7 @@ class Fun(commands.Cog):
     # ==================================
     @commands.command(name="8ball", aliases=["8", "eightball", "8-ball", "eight-ball"], help="Ask the 8 Ball a question!")
     async def eight_ball(self, ctx, arg):
-        ballList = ["will occur on the 14th day after the 7th saturday of your 273rd year.", "is on the horizon of fate", "is within the realm of possibilities", "will never happen, you dumb dumb", ". Don't count on it", ". It is decidedly so!", ". Without a doubt", "has already occurred"]
+        ballList = ["will occur on the 14th day after the 7th saturday of your 273rd year", "is on the horizon of fate", "is within the realm of possibilities", "will never happen, you dumb dumb", "Don't count on it", "It is decidedly so!", "Without a doubt", "has already occurred"]
         await ctx.send(embed=discord.Embed(title="8ball").add_field(name=f"The desire you seek {random.choice(ballList)}!", value="⠀").set_footer(text=f"FinderBot {info.version}"))
     # ==================================
 
